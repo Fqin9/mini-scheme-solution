@@ -56,19 +56,29 @@ def scheme_eq(left, right):
 
 
 def scheme_equal(left, right):
-    if isinstance(left, Pair) or isinstance(right, Pair):
-        return (isinstance(left, Pair) and isinstance(right, Pair)
-                and scheme_equal(left.first, right.first)
-                and scheme_equal(left.rest, right.rest))
-    if number(left) and number(right):
-        return left == right
-    if type(left) is not type(right):
-        return False
-    if left is NIL or right is NIL:
-        return left is right
-    if type(left) in (bool, Symbol, SchemeString):
-        return left == right
-    return left is right
+    """Compare Scheme values without using Python recursion for pairs."""
+    pending = [(left, right)]
+    while pending:
+        left, right = pending.pop()
+        if isinstance(left, Pair) or isinstance(right, Pair):
+            if not (isinstance(left, Pair) and isinstance(right, Pair)):
+                return False
+            pending.append((left.rest, right.rest))
+            pending.append((left.first, right.first))
+            continue
+        if number(left) and number(right):
+            equal = left == right
+        elif type(left) is not type(right):
+            equal = False
+        elif left is NIL or right is NIL:
+            equal = left is right
+        elif type(left) in (bool, Symbol, SchemeString):
+            equal = left == right
+        else:
+            equal = left is right
+        if not equal:
+            return False
+    return True
 
 
 def append(*lists):

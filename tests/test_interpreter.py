@@ -61,6 +61,27 @@ class InterpreterTests(unittest.TestCase):
             "(1 . 2)\n(1 2 3)\n4\n(5)\n3\n(1 2 3 4)\n#t\n#t\n#f\n#f\n#t\n#t\n#f\n#f\n",
         )
 
+    def test_equal_handles_long_lists_and_tail_mismatches(self):
+        self.assert_program(
+            "(begin (define xs '(1)) "
+            + "(define xs (append xs xs)) " * 10
+            + "(list (length xs) (equal? xs xs) "
+            "(equal? xs (append xs '())) "
+            "(equal? xs (append (cdr xs) '(2))) "
+            "(equal? xs (append xs '(1)))))",
+            "(1024 #t #t #f #f)\n",
+        )
+
+    def test_equal_handles_deeply_nested_pairs(self):
+        self.assert_program(
+            "(begin (define xs (cons 'a 'b)) "
+            "(define ys (cons 'a 'b)) (define zs (cons 'a 'c)) "
+            + "(define xs (list xs)) (define ys (list ys)) "
+            "(define zs (list zs)) " * 1200
+            + "(list (equal? xs ys) (equal? xs zs)))",
+            "(#t #f)\n",
+        )
+
     def test_quoted_dot_is_distinct_from_a_string_dot(self):
         self.assert_program(
             "'(1 . 2) '(1 \".\" 2) (list? '(1 . 2))",
